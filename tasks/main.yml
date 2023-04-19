@@ -1797,9 +1797,7 @@
       ansible.builtin.command:
         cmd: authselect apply-changes -b
       when: 'result_authselect_present is defined and result_authselect_present.stat.exists and ((result_pam_module_add is
-        defined and result_pam_module_add.changed) or (result_pam_module_edit is defined and result_pam_module_edit.changed))
-
-        '
+        defined and result_pam_module_add.changed) or (result_pam_module_edit is defined and result_pam_module_edit.changed))'
     when:
     - result_pam_line_present.found is defined
     - result_pam_line_present.found == 0
@@ -1812,10 +1810,7 @@
   - medium_severity | bool
   - no_reboot_needed | bool
   - '"pam" in ansible_facts.packages'
-  - '(result_authselect_available_features.stdout is defined and result_authselect_available_features.stdout is not search("with-pwhistory"))
-    or result_authselect_available_features is not defined
-
-    '
+  - '(result_authselect_available_features.stdout is defined and result_authselect_available_features.stdout is not search("with-pwhistory")) or result_authselect_available_features is not defined'
   tags:
   - CCE-83476-2
   - CJIS-5.6.2.1.1
@@ -3354,6 +3349,18 @@
   - medium_severity
   - no_reboot_needed
   - set_password_hashing_algorithm_systemauth
+
+## GSA Override
+- name: Ensure password reuse is limited - password-auth
+  ansible.builtin.replace:
+    dest: /etc/pam.d/password-auth
+    regexp: ^\s*password\s+.*pam_unix.so.*
+    replace: password    sufficient    pam_unix.so remember={{ var_password_pam_remember }} sha512 shadow nullok try_first_pass use_authtok 
+- name: Ensure password reuse is limited - system-auth
+  ansible.builtin.replace:
+    dest: /etc/pam.d/system-auth
+    regexp: ^\s*password\s+.*pam_unix.so.*
+    replace: password    sufficient    pam_unix.so remember={{ var_password_pam_remember }} sha512 shadow nullok try_first_pass use_authtok 
 
 - name: require emergency mode password
   lineinfile:
